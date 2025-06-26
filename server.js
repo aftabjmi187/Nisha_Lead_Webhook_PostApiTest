@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
     `);
 });
 
-// View all responses (returns exact input format)
+// View all responses
 app.get('/view', (req, res) => {
     if (allResponses.length === 0) {
         return res.send('<h3>No POST data received yet.</h3>');
@@ -71,7 +71,7 @@ app.get('/form', (req, res) => {
     `);
 });
 
-// POST endpoint – returns original input format
+// POST endpoint
 app.post('/dynamic-format', (req, res) => {
     const input = req.body;
     const inputArray = Array.isArray(input) ? input : [input];
@@ -83,9 +83,9 @@ app.post('/dynamic-format', (req, res) => {
             return res.status(400).json(errorResponse);
         }
 
-        allResponses.push(obj); // Save original format
-        console.log("✅ POST Response:", JSON.stringify(obj, null, 2));
-        return res.status(200).json(obj); // Return same as received
+        allResponses.push(obj);
+        console.log("✅ POST Response:", obj); // clean logging
+        return res.status(200).json(obj); // return exactly what was sent
     }
 });
 
