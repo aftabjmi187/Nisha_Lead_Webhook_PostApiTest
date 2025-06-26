@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = process.env.PORT || 3000; // Render needs dynamic port
+const port = process.env.PORT || 3000;
 
 let requestCounter = 0;
 let allResponses = [];
@@ -72,7 +72,7 @@ app.get('/form', (req, res) => {
     `);
 });
 
-// POST endpoint – supports single or multiple objects, responds with ONE object
+// POST endpoint – supports single or multiple objects
 app.post('/dynamic-format', (req, res) => {
     const input = req.body;
     const inputArray = Array.isArray(input) ? input : [input];
@@ -91,13 +91,17 @@ app.post('/dynamic-format', (req, res) => {
             status: "Success"
         };
 
-        Object.values(obj).forEach((val, index) => {
-            responseItem[`field_${index}`] = val;
-        });
+        for (const [key, val] of Object.entries(obj)) {
+            if (key === 'id') {
+                responseItem['id_original'] = val; // rename original id
+            } else {
+                responseItem[key] = val;
+            }
+        }
 
-        allResponses.push(responseItem); // Save it
+        allResponses.push(responseItem);
         console.log("✅ POST Response:", JSON.stringify(responseItem, null, 2));
-        return res.status(200).json(responseItem); // Respond with one object only
+        return res.status(200).json(responseItem); // only one response
     }
 });
 
