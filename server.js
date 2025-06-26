@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 3000;
 
-let requestCounter = 0;
 let allResponses = [];
 
 app.use(bodyParser.json());
@@ -20,14 +19,14 @@ app.get('/', (req, res) => {
     `);
 });
 
-// View all responses
+// View all responses (returns exact input format)
 app.get('/view', (req, res) => {
     if (allResponses.length === 0) {
         return res.send('<h3>No POST data received yet.</h3>');
     }
 
     const formatted = allResponses.map(item => JSON.stringify(item, null, 2)).join('<hr>');
-    res.send(`<h3>📄 All Individual Responses:</h3><pre>${formatted}</pre>`);
+    res.send(`<h3>📄 All Responses:</h3><pre>${formatted}</pre>`);
 });
 
 // HTML UI form
@@ -36,10 +35,10 @@ app.get('/form', (req, res) => {
         <h2>🔁 Submit JSON to /dynamic-format</h2>
         <textarea id="jsonInput" rows="10" cols="60">
 {
-  "userId": 261,
-  "id": 101,
-  "title": "User 261 Title",
-  "body": "User 261 body content for testing purpose."
+  "userId": 1,
+  "id": 1,
+  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+  "body": "quia et suscipit\\nsuscipit recusandae consequuntur expedita et cum\\nreprehenderit molestiae ut ut quas totam\\nnostrum rerum est autem sunt rem eveniet architecto"
 }
         </textarea><br><br>
         <button onclick="sendData()">Send</button>
@@ -72,7 +71,7 @@ app.get('/form', (req, res) => {
     `);
 });
 
-// POST endpoint – supports single or multiple objects
+// POST endpoint – returns original input format
 app.post('/dynamic-format', (req, res) => {
     const input = req.body;
     const inputArray = Array.isArray(input) ? input : [input];
@@ -84,24 +83,9 @@ app.post('/dynamic-format', (req, res) => {
             return res.status(400).json(errorResponse);
         }
 
-        requestCounter++;
-
-        const responseItem = {
-            id: requestCounter,
-            status: "Success"
-        };
-
-        for (const [key, val] of Object.entries(obj)) {
-            if (key === 'id') {
-                responseItem['id_original'] = val; // rename original id
-            } else {
-                responseItem[key] = val;
-            }
-        }
-
-        allResponses.push(responseItem);
-        console.log("✅ POST Response:", JSON.stringify(responseItem, null, 2));
-        return res.status(200).json(responseItem); // only one response
+        allResponses.push(obj); // Save original format
+        console.log("✅ POST Response:", JSON.stringify(obj, null, 2));
+        return res.status(200).json(obj); // Return same as received
     }
 });
 
