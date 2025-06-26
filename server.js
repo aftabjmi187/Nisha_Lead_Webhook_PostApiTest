@@ -35,10 +35,10 @@ app.get('/form', (req, res) => {
         <h2>🔁 Submit JSON to /dynamic-format</h2>
         <textarea id="jsonInput" rows="10" cols="60">
 {
-  "userId": 1,
-  "id": 1,
-  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-  "body": "quia et suscipit\\nsuscipit recusandae consequuntur expedita et cum\\nreprehenderit molestiae ut ut quas totam\\nnostrum rerum est autem sunt rem eveniet architecto"
+  "userId": 3,
+  "id": 101,
+  "title": "Testing title",
+  "body": "This is the original body text."
 }
         </textarea><br><br>
         <button onclick="sendData()">Send</button>
@@ -71,7 +71,7 @@ app.get('/form', (req, res) => {
     `);
 });
 
-// POST endpoint
+// POST endpoint – returns same object that was posted
 app.post('/dynamic-format', (req, res) => {
     const input = req.body;
     const inputArray = Array.isArray(input) ? input : [input];
@@ -83,9 +83,11 @@ app.post('/dynamic-format', (req, res) => {
             return res.status(400).json(errorResponse);
         }
 
-        allResponses.push(obj);
-        console.log("✅ POST Response:", obj); // clean logging
-        return res.status(200).json(obj); // return exactly what was sent
+        allResponses.push(obj); // store the original input
+        console.log("✅ POST Response:");
+        console.dir(obj, { depth: null, colors: true });
+
+        return res.status(200).json(obj); // return exact input
     }
 });
 
