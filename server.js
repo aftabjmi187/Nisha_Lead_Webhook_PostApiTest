@@ -19,21 +19,21 @@ app.get('/', (req, res) => {
     `);
 });
 
-// View all responses
+// View all stored responses
 app.get('/view', (req, res) => {
     if (allResponses.length === 0) {
         return res.send('<h3>No POST data received yet.</h3>');
     }
 
-    const formatted = allResponses.map(item => JSON.stringify(item, null, 2)).join('<hr>');
-    res.send(`<h3>📄 All Responses:</h3><pre>${formatted}</pre>`);
+    const formatted = allResponses.map(item => JSON.stringify(item, null, 2)).join(',<br><br>');
+    res.send(`<h3>📄 All Responses:</h3><pre style="padding:10px; background:#f4f4f4; border:1px solid #ccc;">${formatted}</pre>`);
 });
 
-// HTML UI form
+// UI form to send JSON
 app.get('/form', (req, res) => {
     res.send(`
         <h2>🔁 Submit JSON to /dynamic-format</h2>
-        <textarea id="jsonInput" rows="10" cols="60">
+        <textarea id="jsonInput" rows="10" cols="60" style="font-family: monospace;">
 {
   "userId": 3,
   "id": 101,
@@ -42,7 +42,7 @@ app.get('/form', (req, res) => {
 }
         </textarea><br><br>
         <button onclick="sendData()">Send</button>
-        <pre id="responseOutput"></pre>
+        <pre id="responseOutput" style="padding: 10px; background: #f4f4f4; border: 1px solid #ccc; border-radius: 6px;"></pre>
 
         <script>
             function sendData() {
@@ -56,9 +56,17 @@ app.get('/form', (req, res) => {
                         },
                         body: JSON.stringify(json)
                     })
-                    .then(res => res.json())
+                    .then(res => res.text())
                     .then(data => {
-                        document.getElementById('responseOutput').innerText = JSON.stringify(data, null, 2);
+                        try {
+                            const parsed = JSON.parse('[' + data.replace(/}\\s*,\\s*{/g, '},{') + ']');
+                            const pretty = parsed.length === 1
+                                ? JSON.stringify(parsed[0], null, 2)
+                                : parsed.map(obj => JSON.stringify(obj, null, 2)).join(',\\n\\n');
+                            document.getElementById('responseOutput').innerText = pretty;
+                        } catch (e) {
+                            document.getElementById('responseOutput').innerText = data;
+                        }
                     })
                     .catch(err => {
                         document.getElementById('responseOutput').innerText = '❌ Error: ' + err;
@@ -71,7 +79,7 @@ app.get('/form', (req, res) => {
     `);
 });
 
-// POST endpoint – returns same object that was posted
+// POST endpoint
 app.post('/dynamic-format', (req, res) => {
     const input = req.body;
     const inputArray = Array.isArray(input) ? input : [input];
@@ -82,13 +90,16 @@ app.post('/dynamic-format', (req, res) => {
             console.log("❌ Error:", errorResponse);
             return res.status(400).json(errorResponse);
         }
-
-        allResponses.push(obj); // store the original input
-        console.log("✅ POST Response:");
-        console.dir(obj, { depth: null, colors: true });
-
-        return res.status(200).json(obj); // return exact input
     }
+
+    allResponses.push(...inputArray);
+
+    console.log("✅ POST Response:");
+    inputArray.forEach(obj => console.dir(obj, { depth: null, colors: true }));
+
+    const responseText = inputArray.map(obj => JSON.stringify(obj)).join(',\n');
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).send(responseText);
 });
 
 // Start server
