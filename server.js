@@ -9,20 +9,20 @@ let allResponses = [];
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Root: show nothing
+// Root endpoint - blank
 app.get('/', (req, res) => {
-    res.status(204).send(); // No Content
+    res.status(204).send(); // No content
 });
 
-// View all stored responses - clean format
+// View all stored responses (clean plain format)
 app.get('/view', (req, res) => {
     if (allResponses.length === 0) {
-        return res.status(200).send('No POST data received yet.');
+        return res.send('No POST data received yet.');
     }
 
-    const output = allResponses.map(obj => JSON.stringify(obj)).join(',\n\n');
+    const formatted = allResponses.map(item => JSON.stringify(item)).join(',\n\n');
     res.setHeader('Content-Type', 'application/json');
-    res.send(output);
+    res.send(formatted);
 });
 
 // POST endpoint
@@ -38,9 +38,13 @@ app.post('/dynamic-format', (req, res) => {
 
     allResponses.push(...inputArray);
 
-    console.log("✅ Received:", inputArray);
+    console.log("✅ POST Response:");
+    inputArray.forEach(obj => console.dir(obj, { depth: null, colors: true }));
 
-    res.status(200).json(inputArray.length === 1 ? inputArray[0] : inputArray);
+    // Return as plain line(s), no array/brackets
+    const responseText = inputArray.map(obj => JSON.stringify(obj)).join(',\n\n');
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).send(responseText);
 });
 
 // Start server
